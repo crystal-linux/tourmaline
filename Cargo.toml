@@ -1,0 +1,24 @@
+[package]
+name = "tourmaline"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "tourmaline"
+
+[[bin]]
+name = "tml"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "3.2.22"
+color-eyre = "0.6.2"
+nu-cli = "0.68.1"
+nu-command = "0.68.1"
+nu-protocol = "0.68.1"
+thiserror = "1.0.35"
+tokio = { version = "1.21.1", features = ["rt", "io-std", "io-util", "process", "time", "macros", "tracing", "fs"] }
+tracing = "0.1.36"
+tracing-subscriber = "0.3.15"
