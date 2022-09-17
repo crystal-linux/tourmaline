@@ -1,7 +1,38 @@
-use scripting::executor::NuExecutor;
+use error::AppResult;
+use scripting::{
+    loader::ScriptLoader,
+    script::{Script, ScriptArgs},
+};
 
-mod scripting;
+pub mod error;
+pub(crate) mod scripting;
+pub(crate) mod utils;
 
-pub fn test_execute(script: String) {
-    NuExecutor::new(script).execute();
+pub struct TestScript;
+
+impl Script for TestScript {
+    type Args = TestScriptArgs;
+
+    fn get_name() -> &'static str {
+        "test.nu"
+    }
+}
+
+pub struct TestScriptArgs {
+    pub msg: String,
+}
+
+impl ScriptArgs for TestScriptArgs {
+    fn get_args(self) -> Vec<String> {
+        vec![self.msg]
+    }
+}
+
+pub fn test_execute() -> AppResult<()> {
+    let loader = ScriptLoader::new();
+    let test_script = loader.load::<TestScript>()?;
+
+    test_script.execute(TestScriptArgs {
+        msg: "'Hello World'".to_string(),
+    })
 }

@@ -1,2 +1,3 @@
 pub mod executor;
-mod loader;
+pub mod loader;
+pub mod script;

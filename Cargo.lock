@@ -3277,6 +3277,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "color-eyre",
+ "lazy_static",
+ "miette 5.3.0",
  "nu-cli",
  "nu-command",
  "nu-protocol",

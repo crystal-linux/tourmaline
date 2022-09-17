@@ -1,5 +1,9 @@
 #![allow(unused)]
+use std::path::Path;
+
 use nu_protocol::{PipelineData, Span};
+
+use crate::error::{AppError, AppResult};
 
 /// An executor for nu scripts
 pub struct NuExecutor {
@@ -8,9 +12,9 @@ pub struct NuExecutor {
 }
 
 impl NuExecutor {
-    pub fn new(script_path: String) -> Self {
+    pub fn new<P: AsRef<Path>>(script_path: P) -> Self {
         Self {
-            script_path,
+            script_path: script_path.as_ref().to_string_lossy().into_owned(),
             args: Vec::new(),
         }
     }
@@ -28,7 +32,7 @@ impl NuExecutor {
         self
     }
 
-    pub fn execute(&mut self) {
+    pub fn execute(&mut self) -> AppResult<()> {
         let mut engine_state = nu_command::create_default_context();
         let mut stack = nu_protocol::engine::Stack::new();
         let input = PipelineData::new(Span::new(0, 0));
@@ -43,6 +47,6 @@ impl NuExecutor {
             input,
             false,
         )
-        .unwrap();
+        .map_err(AppError::from)
     }
 }
