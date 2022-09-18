@@ -28,11 +28,13 @@ impl ScriptArgs for TestScriptArgs {
     }
 }
 
-pub fn test_execute() -> AppResult<()> {
+pub async fn test_execute() -> AppResult<()> {
     let loader = ScriptLoader::new();
     let test_script = loader.load::<TestScript>()?;
 
-    test_script.execute(TestScriptArgs {
-        msg: "'Hello World'".to_string(),
-    })
+    test_script
+        .execute(TestScriptArgs {
+            msg: "'Hello World'".to_string(),
+        })
+        .await
 }

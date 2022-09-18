@@ -36,7 +36,7 @@ impl<S: Script> NuScript<S> {
     }
 
     /// Executes the script with the given args
-    pub fn execute(&self, args: S::Args) -> AppResult<()> {
+    pub async fn execute(&self, args: S::Args) -> AppResult<()> {
         NuExecutor::new(&self.path)
             .add_args(args.get_args())
             .add_global_var("BY_TOURMALINE", VarValue::string("Hello from Tourmaline!"))
@@ -45,5 +45,6 @@ impl<S: Script> NuScript<S> {
                 VarValue::string("This variable was provided by tourmaline"),
             )
             .execute()
+            .await
     }
 }

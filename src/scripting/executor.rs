@@ -1,9 +1,11 @@
 #![allow(unused)]
 use std::{
     collections::HashMap,
-    fs, mem,
+    mem,
     path::{Path, PathBuf},
 };
+
+use tokio::fs;
 
 use miette::IntoDiagnostic;
 use nu_protocol::{
@@ -30,7 +32,7 @@ impl VarValue {
 
 /// An executor for nu scripts
 pub struct NuExecutor {
-    script_path: String,
+    script_path: PathBuf,
     args: Vec<String>,
     global_vars: HashMap<String, VarValue>,
 }
@@ -38,7 +40,7 @@ pub struct NuExecutor {
 impl NuExecutor {
     pub fn new<P: AsRef<Path>>(script_path: P) -> Self {
         Self {
-            script_path: script_path.as_ref().to_string_lossy().into_owned(),
+            script_path: script_path.as_ref().to_owned(),
             args: Vec::new(),
             global_vars: HashMap::new(),
         }
@@ -66,7 +68,7 @@ impl NuExecutor {
     }
 
     /// Executes the given script file in a clean nu context.
-    pub fn execute(&mut self) -> AppResult<()> {
+    pub async fn execute(&mut self) -> AppResult<()> {
         let mut engine_state = nu_command::create_default_context();
         let mut stack = nu_protocol::engine::Stack::new();
         let input = PipelineData::new(Span::new(0, 0));
@@ -80,7 +82,7 @@ impl NuExecutor {
             .collect::<HashMap<_, _>>();
 
         add_variables_to_state(vars, &mut engine_state, &mut stack);
-        let block = read_script_file(&self.script_path, &mut engine_state)?;
+        let block = read_script_file(&self.script_path, &mut engine_state).await?;
 
         nu_engine::eval_block(
             &engine_state,
@@ -92,15 +94,21 @@ impl NuExecutor {
         )
         .into_diagnostic()?;
 
-        // TODO: Create the AST for the call here instead of parsing it from a string
-        let args = format!("main {}", self.args.join(" "));
-        nu_cli::eval_source(
-            &mut engine_state,
-            &mut stack,
-            args.as_bytes(),
-            "<commandline>",
-            input,
-        );
+        let args = mem::take(&mut self.args);
+
+        // block in a different thread to be able to execute scripts in parallel
+        tokio::task::spawn_blocking(move || {
+            // TODO: Create the AST for the call here instead of parsing it from a string
+            let args = format!("main {}", args.join(" "));
+            nu_cli::eval_source(
+                &mut engine_state,
+                &mut stack,
+                args.as_bytes(),
+                "<commandline>",
+                input,
+            );
+        })
+        .await;
 
         Ok(())
     }
@@ -115,24 +123,36 @@ fn add_variables_to_state(
 ) {
     let state2 = nu_command::create_default_context();
     let mut working_set = StateWorkingSet::new(&state2);
-    for (name, value) in vars {
-        let var_id = working_set.add_variable(
-            name.as_bytes().to_vec(),
-            Span::new(0, 0),
-            nu_protocol::Type::String,
-        );
-        stack.add_var(var_id, value);
-    }
+    vars.into_iter()
+        .map(|(name, value)| {
+            (
+                working_set.add_variable(
+                    name.as_bytes().to_vec(),
+                    Span::new(0, 0),
+                    nu_protocol::Type::String,
+                ),
+                value,
+            )
+        })
+        .for_each(|(var_id, value)| stack.add_var(var_id, value));
     state.merge_delta(working_set.render());
 }
 
 /// Reads the nu script file and
 /// returns its root block
-fn read_script_file(path: &str, engine_state: &mut EngineState) -> AppResult<Block> {
+async fn read_script_file(path: &Path, engine_state: &mut EngineState) -> AppResult<Block> {
     let mut working_set = StateWorkingSet::new(engine_state);
-    let script_contents = fs::read(&path).into_diagnostic()?;
+    // TODO: Async
+    let script_contents = fs::read(&path).await.into_diagnostic()?;
+    let string_path = path.to_string_lossy().into_owned();
     // parse the source file
-    let (block, err) = nu_parser::parse(&mut working_set, Some(path), &script_contents, false, &[]);
+    let (block, err) = nu_parser::parse(
+        &mut working_set,
+        Some(&string_path),
+        &script_contents,
+        false,
+        &[],
+    );
 
     if let Some(err) = err {
         return Err(AppError::from(err));
