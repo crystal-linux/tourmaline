@@ -71,7 +71,6 @@ impl NuExecutor {
     pub async fn execute(&mut self) -> AppResult<()> {
         let mut engine_state = nu_command::create_default_context();
         let mut stack = nu_protocol::engine::Stack::new();
-        let input = PipelineData::new(Span::new(0, 0));
         let init_cwd = nu_cli::get_init_cwd();
         nu_engine::convert_env_values(&mut engine_state, &mut stack);
 
@@ -105,7 +104,7 @@ impl NuExecutor {
                 &mut stack,
                 args.as_bytes(),
                 "<commandline>",
-                input,
+                PipelineData::new(Span::new(0, 0)),
             );
         })
         .await;
