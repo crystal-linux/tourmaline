@@ -19,6 +19,8 @@ lazy_static = "1.4.0"
 miette = "5.3.0"
 nu-cli = "0.68.1"
 nu-command = "0.68.1"
+nu-engine = "0.68.1"
+nu-parser = "0.68.1"
 nu-protocol = "0.68.1"
 thiserror = "1.0.35"
 tokio = { version = "1.21.1", features = ["rt", "io-std", "io-util", "process", "time", "macros", "tracing", "fs"] }

@@ -2,7 +2,7 @@ use std::{marker::PhantomData, path::PathBuf};
 
 use crate::error::AppResult;
 
-use super::executor::NuExecutor;
+use super::executor::{NuExecutor, VarValue};
 
 /// A trait implemented for a given nu script type to
 /// associate arguments
@@ -39,6 +39,11 @@ impl<S: Script> NuScript<S> {
     pub fn execute(&self, args: S::Args) -> AppResult<()> {
         NuExecutor::new(&self.path)
             .add_args(args.get_args())
+            .add_global_var("BY_TOURMALINE", VarValue::string("Hello from Tourmaline!"))
+            .add_global_var(
+                "ANOTHER_ONE",
+                VarValue::string("This variable was provided by tourmaline"),
+            )
             .execute()
     }
 }

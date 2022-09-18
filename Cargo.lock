@@ -3281,6 +3281,8 @@ dependencies = [
  "miette 5.3.0",
  "nu-cli",
  "nu-command",
+ "nu-engine",
+ "nu-parser",
  "nu-protocol",
  "thiserror",
  "tokio",
