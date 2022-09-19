@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
-const CONFIG_DIR: &str = "/etc";
+const DEFAULT_CONFIG_DIR: &str = "/etc";
 
 lazy_static::lazy_static! {
-    pub static ref CFG_PATH: PathBuf = PathBuf::from(CONFIG_DIR).join("tourmaline");
+    pub static ref CFG_PATH: PathBuf = env::var("TRM_CFG_PATH").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(DEFAULT_CONFIG_DIR).join("tourmaline"));
     pub static ref SCRIPT_PATH: PathBuf = CFG_PATH.join("scripts");
 }

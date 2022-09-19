@@ -1,40 +1,29 @@
 use error::AppResult;
-use scripting::{
-    loader::ScriptLoader,
-    script::{Script, ScriptArgs},
-};
+use scripting::{loader::ScriptLoader, script::JSONArgs};
+use tasks::{SetupUsersScript, UsersConfig};
 
 pub mod error;
 pub(crate) mod scripting;
+pub mod tasks;
 pub(crate) mod utils;
 
-pub struct TestScript;
+pub struct TaskExecutor {
+    loader: ScriptLoader,
+}
 
-impl Script for TestScript {
-    type Args = TestScriptArgs;
-
-    fn get_name() -> &'static str {
-        "test.nu"
+impl TaskExecutor {
+    pub fn new() -> Self {
+        Self {
+            loader: ScriptLoader::new(),
+        }
     }
-}
 
-pub struct TestScriptArgs {
-    pub msg: String,
-}
-
-impl ScriptArgs for TestScriptArgs {
-    fn get_args(self) -> Vec<String> {
-        vec![self.msg]
+    /// Sets up user accounts
+    #[tracing::instrument(level = "debug", skip(self))]
+    pub async fn setup_users(&self, users_cfg: UsersConfig) -> AppResult<()> {
+        self.loader
+            .load::<SetupUsersScript>()?
+            .execute(JSONArgs(users_cfg))
+            .await
     }
-}
-
-pub async fn test_execute() -> AppResult<()> {
-    let loader = ScriptLoader::new();
-    let test_script = loader.load::<TestScript>()?;
-
-    test_script
-        .execute(TestScriptArgs {
-            msg: "'Hello World'".to_string(),
-        })
-        .await
 }

@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::{marker::PhantomData, path::PathBuf};
 
 use crate::error::AppResult;
@@ -46,5 +47,19 @@ impl<S: Script> NuScript<S> {
             )
             .execute()
             .await
+    }
+}
+
+pub struct JSONArgs<T: Serialize>(pub T);
+
+impl<T: Serialize> ScriptArgs for JSONArgs<T> {
+    fn get_args(self) -> Vec<String> {
+        // TODO: Make this lesss... weird
+        // Maybe try providing the value directly in the executor
+        // instead of parsing and wrapping it
+        vec![format!(
+            "('{}' | from json)",
+            serde_json::to_string(&self.0).unwrap()
+        )]
     }
 }

@@ -99,15 +99,20 @@ impl NuExecutor {
         tokio::task::spawn_blocking(move || {
             // TODO: Create the AST for the call here instead of parsing it from a string
             let args = format!("main {}", args.join(" "));
-            nu_cli::eval_source(
+            if !nu_cli::eval_source(
                 &mut engine_state,
                 &mut stack,
                 args.as_bytes(),
                 "<commandline>",
                 PipelineData::new(Span::new(0, 0)),
-            );
+            ) {
+                Err(AppError::FailedToExecuteScript)
+            } else {
+                Ok(())
+            }
         })
-        .await;
+        .await
+        .unwrap()?;
 
         Ok(())
     }
