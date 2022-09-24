@@ -10,6 +10,7 @@ pub enum RecordValue {
     Int(i64),
     Float(f64),
     String(String),
+    Bytes(Vec<u8>),
     Boolean(bool),
     Null,
     Map(Vec<(RecordValue, RecordValue)>),
@@ -32,6 +33,7 @@ impl RecordValue {
             RecordValue::List(l) => {
                 Expr::List(l.into_iter().map(RecordValue::into_expression).collect())
             }
+            RecordValue::Bytes(b) => Expr::Binary(b),
         }
     }
 
@@ -69,6 +71,7 @@ impl RecordValue {
                 };
                 Type::List(Box::new(list_type))
             }
+            RecordValue::Bytes(_) => Type::Binary,
         }
     }
 }
@@ -83,6 +86,7 @@ impl ToString for RecordValue {
             RecordValue::Null => String::new(),
             RecordValue::Map(_) => String::new(),
             RecordValue::List(_) => String::new(),
+            RecordValue::Bytes(_) => String::new(),
         }
     }
 }
@@ -143,5 +147,11 @@ impl<T: Into<RecordValue>> From<Vec<T>> for RecordValue {
     fn from(list: Vec<T>) -> Self {
         let list = list.into_iter().map(|l| l.into()).collect();
         Self::List(list)
+    }
+}
+
+impl From<Vec<u8>> for RecordValue {
+    fn from(b: Vec<u8>) -> Self {
+        Self::Bytes(b)
     }
 }

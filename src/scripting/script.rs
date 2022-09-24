@@ -1,10 +1,13 @@
 use std::{marker::PhantomData, path::PathBuf};
 
+use serde::Serialize;
+
 use crate::error::AppResult;
 
 use super::{
     executor::{NuExecutor, VarValue},
     record::RecordValue,
+    record_serializer::RecordSerializer,
 };
 
 /// A trait implemented for a given nu script type to
@@ -22,6 +25,17 @@ pub trait Script {
 /// be passed to the script
 pub trait ScriptArgs {
     fn get_args(self) -> Vec<RecordValue>;
+}
+
+impl<T: Serialize> ScriptArgs for T {
+    fn get_args(self) -> Vec<RecordValue> {
+        let mut serializer = RecordSerializer::default();
+        let val = self.serialize(&mut serializer).unwrap();
+        match val {
+            RecordValue::List(entries) => entries,
+            val => vec![val],
+        }
+    }
 }
 
 /// A nu script instance that can be executed
