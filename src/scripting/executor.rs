@@ -19,25 +19,11 @@ use crate::error::{AppError, AppResult};
 
 use super::record::RecordValue;
 
-#[derive(Clone, Debug)]
-pub enum VarValue {
-    String(String),
-    Integer(i64),
-    Float(f64),
-    Boolean(bool),
-}
-
-impl VarValue {
-    pub fn string<S: ToString>(s: S) -> Self {
-        Self::String(s.to_string())
-    }
-}
-
 /// An executor for nu scripts
 pub struct NuExecutor {
     script_path: PathBuf,
     args: Vec<RecordValue>,
-    global_vars: HashMap<String, VarValue>,
+    global_vars: HashMap<String, RecordValue>,
 }
 
 impl NuExecutor {
@@ -67,7 +53,7 @@ impl NuExecutor {
 
     /// Adds a global variable to the executor which can
     /// be accessed from within the script
-    pub fn add_global_var<S: ToString>(&mut self, name: S, value: VarValue) -> &mut Self {
+    pub fn add_global_var<S: ToString>(&mut self, name: S, value: RecordValue) -> &mut Self {
         self.global_vars.insert(name.to_string(), value);
 
         self
@@ -85,7 +71,7 @@ impl NuExecutor {
         let vars = mem::take(&mut self.global_vars);
         let vars = vars
             .into_iter()
-            .map(|(k, v)| (k, map_var_to_value(v)))
+            .map(|(k, v)| (k, v.into_protocol_value()))
             .collect::<HashMap<_, _>>();
 
         add_variables_to_state(vars, &mut engine_state, &mut stack);
@@ -225,15 +211,4 @@ fn create_call(decl_id: DeclId, args: Vec<RecordValue>) -> Block {
 
 fn empty_pipeline() -> PipelineData {
     PipelineData::new(Span::new(0, 0))
-}
-
-fn map_var_to_value(var: VarValue) -> Value {
-    let span = Span::new(0, 0);
-
-    match var {
-        VarValue::String(val) => Value::String { val, span },
-        VarValue::Integer(val) => Value::Int { val, span },
-        VarValue::Float(val) => Value::Float { val, span },
-        VarValue::Boolean(val) => Value::Bool { val, span },
-    }
 }

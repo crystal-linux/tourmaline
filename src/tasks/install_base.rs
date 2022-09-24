@@ -1,7 +1,7 @@
 use crate::script;
 
 script!(InstallBaseScript {
-    file = "install-base.nu"
+    file = "install-base"
     args = InstallBaseArgs
 });
 

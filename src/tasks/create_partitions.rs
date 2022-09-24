@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::script;
 
 script!(CreatePartitionsScript {
-    file = "create-partitions.nu"
+    file = "create-partitions"
     args = PartitionsConfig
 });
 

@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::script;
 
 script!(ConfigureNetworkScript {
-    file = "configure-network.nu"
+    file = "configure-network"
     args = NetworkConfig
 });
 

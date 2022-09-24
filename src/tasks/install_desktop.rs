@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::script;
 
 script!(InstallDesktopScript {
-    file = "install-desktop.nu"
+    file = "install-desktop"
     args = DesktopConfig
 });
 

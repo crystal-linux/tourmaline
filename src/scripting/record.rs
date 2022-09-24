@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use nu_protocol::{
     ast::{Expr, Expression},
-    Span, Type,
+    Span, Type, Value,
 };
 
 #[derive(Clone, Debug)]
@@ -18,6 +18,7 @@ pub enum RecordValue {
 }
 
 impl RecordValue {
+    /// Creates an expresion for this value
     pub fn into_expr(self) -> Expr {
         match self {
             RecordValue::Int(i) => Expr::Int(i),
@@ -37,6 +38,7 @@ impl RecordValue {
         }
     }
 
+    /// Creates a new wrapped expression for this value
     pub fn into_expression(self) -> Expression {
         let nu_type = self.get_type();
         let expr = self.into_expr();
@@ -49,6 +51,37 @@ impl RecordValue {
         }
     }
 
+    /// Creates a nu protocol value from this value
+    pub fn into_protocol_value(self) -> Value {
+        let span = Span::new(0, 0);
+
+        match self {
+            RecordValue::Int(val) => Value::Int { val, span },
+            RecordValue::Float(val) => Value::Float { val, span },
+            RecordValue::String(val) => Value::String { val, span },
+            RecordValue::Bytes(val) => Value::Binary { val, span },
+            RecordValue::Boolean(val) => Value::Bool { val, span },
+            RecordValue::Null => Value::Nothing { span },
+            RecordValue::Map(m) => {
+                let mut cols = Vec::new();
+                let mut vals = Vec::new();
+                for (key, val) in m {
+                    cols.push(key.to_string());
+                    vals.push(val.into_protocol_value());
+                }
+                Value::Record { cols, vals, span }
+            }
+            RecordValue::List(l) => Value::List {
+                vals: l
+                    .into_iter()
+                    .map(RecordValue::into_protocol_value)
+                    .collect(),
+                span,
+            },
+        }
+    }
+
+    /// Returns the type of this value
     fn get_type(&self) -> Type {
         match &self {
             RecordValue::Int(_) => Type::Int,

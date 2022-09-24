@@ -2,6 +2,7 @@ use error::AppResult;
 use scripting::{loader::ScriptLoader, script::Script};
 use tasks::*;
 
+pub mod config;
 pub mod error;
 pub(crate) mod scripting;
 pub mod tasks;
@@ -15,7 +16,7 @@ macro_rules! tasks {
     ($($function:ident => $script:ident),+) => {
        $(
             #[tracing::instrument(level = "trace", skip(self))]
-            pub async fn $function(&self, cfg: <$script as crate::scripting::script::Script>::Args) -> AppResult<()> {
+            pub async fn $function(&self, cfg: &<$script as crate::scripting::script::Script>::Args) -> AppResult<()> {
                 self.execute::<$script>(cfg).await
             }
         )+
@@ -34,8 +35,8 @@ impl TaskExecutor {
     );
 
     #[inline]
-    async fn execute<S: Script>(&self, args: S::Args) -> AppResult<()> {
-        self.loader.load::<S>()?.execute(args).await
+    async fn execute<S: Script>(&self, args: &S::Args) -> AppResult<()> {
+        self.loader.load::<S>()?.execute(&args).await
     }
 }
 

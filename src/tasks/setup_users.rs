@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::script;
 
 script!(SetupUsersScript {
-    file = "setup-users.nu"
+    file = "setup-users"
     args = UsersConfig
 });
 

@@ -24,7 +24,7 @@ async fn main() -> miette::Result<()> {
             },
         ],
     };
-    executor.setup_users(user_cfg).await?;
+    executor.setup_users(&user_cfg).await?;
 
     Ok(())
 }

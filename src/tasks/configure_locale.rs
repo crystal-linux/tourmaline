@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::script;
 
 script!(ConfigureLocaleScript {
-    file = "configure-locale.nu"
+    file = "configure-locale"
     args = LocaleConfig
 });
 

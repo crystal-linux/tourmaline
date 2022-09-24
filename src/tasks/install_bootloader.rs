@@ -5,12 +5,12 @@ use serde::Serialize;
 use crate::script;
 
 script!(InstallBootloaderScript {
-    file = "install-bootloader.nu"
-    args = BooloaderConfig
+    file = "install-bootloader"
+    args = BootloaderConfig
 });
 
 #[derive(Clone, Debug, Serialize)]
-pub struct BooloaderConfig {
+pub struct BootloaderConfig {
     preset: BootloaderPreset,
     location: PathBuf,
 }
