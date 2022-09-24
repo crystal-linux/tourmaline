@@ -53,8 +53,23 @@ impl NuExecutor {
 
     /// Adds a global variable to the executor which can
     /// be accessed from within the script
-    pub fn add_global_var<S: ToString>(&mut self, name: S, value: RecordValue) -> &mut Self {
-        self.global_vars.insert(name.to_string(), value);
+    pub fn add_global_var<S: ToString, V: Into<RecordValue>>(
+        &mut self,
+        name: S,
+        value: V,
+    ) -> &mut Self {
+        self.global_vars.insert(name.to_string(), value.into());
+
+        self
+    }
+
+    /// Adds multiple global variables
+    pub fn add_global_vars<S: ToString, R: Into<RecordValue>, I: IntoIterator<Item = (S, R)>>(
+        &mut self,
+        vars: I,
+    ) -> &mut Self {
+        self.global_vars
+            .extend(&mut vars.into_iter().map(|(k, v)| (k.to_string(), v.into())));
 
         self
     }

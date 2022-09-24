@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{marker::PhantomData, path::PathBuf};
+use std::{collections::HashMap, marker::PhantomData, path::PathBuf};
 
 use serde::Serialize;
 
@@ -46,6 +46,7 @@ impl<T: Serialize> ScriptArgs for T {
 /// A nu script instance that can be executed
 pub struct NuScript<S: Script> {
     path: PathBuf,
+    vars: HashMap<String, RecordValue>,
     __phantom: PhantomData<S>,
 }
 
@@ -53,8 +54,20 @@ impl<S: Script> NuScript<S> {
     pub(crate) fn new(path: PathBuf) -> Self {
         Self {
             path,
+            vars: HashMap::new(),
             __phantom: PhantomData,
         }
+    }
+
+    /// Adds a global variable
+    pub fn set_global_var<S1: ToString, V: Into<RecordValue>>(
+        &mut self,
+        key: S1,
+        value: V,
+    ) -> &mut Self {
+        self.vars.insert(key.to_string(), value.into());
+
+        self
     }
 
     /// Executes the script with the given args
@@ -62,6 +75,7 @@ impl<S: Script> NuScript<S> {
     pub async fn execute(&self, args: &S::Args) -> AppResult<()> {
         NuExecutor::new(&self.path)
             .add_args(args.get_args())
+            .add_global_vars(self.vars.clone())
             .execute()
             .await
     }
@@ -86,11 +100,11 @@ macro_rules! script {
             }
 
             fn get_pre_hook() -> &'static str {
-                concat!("name", ".pre.nu")
+                concat!($name, ".pre.nu")
             }
 
             fn get_post_hook() -> &'static str {
-                concat!("name", ".post.nu")
+                concat!($name, ".post.nu")
             }
         }
     };
