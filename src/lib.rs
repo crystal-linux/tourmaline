@@ -1,6 +1,6 @@
 use error::AppResult;
-use scripting::loader::ScriptLoader;
-use tasks::{SetupUsersScript, UsersConfig};
+use scripting::{loader::ScriptLoader, script::Script};
+use tasks::*;
 
 pub mod error;
 pub(crate) mod scripting;
@@ -11,14 +11,31 @@ pub struct TaskExecutor {
     loader: ScriptLoader,
 }
 
+macro_rules! tasks {
+    ($($function:ident => $script:ident),+) => {
+       $(
+            #[tracing::instrument(level = "trace", skip(self))]
+            pub async fn $function(&self, cfg: <$script as crate::scripting::script::Script>::Args) -> AppResult<()> {
+                self.execute::<$script>(cfg).await
+            }
+        )+
+    }
+}
+
 impl TaskExecutor {
-    /// Sets up user accounts
-    #[tracing::instrument(level = "trace", skip(self))]
-    pub async fn setup_users(&self, users_cfg: UsersConfig) -> AppResult<()> {
-        self.loader
-            .load::<SetupUsersScript>()?
-            .execute(users_cfg)
-            .await
+    tasks!(
+        setup_users => SetupUsersScript,
+        configure_network => ConfigureNetworkScript,
+        create_partitions => CreatePartitionsScript,
+        install_base => InstallBaseScript,
+        install_bootloader => InstallBootloaderScript,
+        install_desktop => InstallDesktopScript,
+        configure_local => ConfigureLocaleScript
+    );
+
+    #[inline]
+    async fn execute<S: Script>(&self, args: S::Args) -> AppResult<()> {
+        self.loader.load::<S>()?.execute(args).await
     }
 }
 
