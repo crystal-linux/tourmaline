@@ -1,5 +1,5 @@
 use error::AppResult;
-use scripting::{loader::ScriptLoader, script::JSONArgs};
+use scripting::loader::ScriptLoader;
 use tasks::{SetupUsersScript, UsersConfig};
 
 pub mod error;
@@ -12,18 +12,20 @@ pub struct TaskExecutor {
 }
 
 impl TaskExecutor {
-    pub fn new() -> Self {
-        Self {
-            loader: ScriptLoader::new(),
-        }
-    }
-
     /// Sets up user accounts
     #[tracing::instrument(level = "debug", skip(self))]
     pub async fn setup_users(&self, users_cfg: UsersConfig) -> AppResult<()> {
         self.loader
             .load::<SetupUsersScript>()?
-            .execute(JSONArgs(users_cfg))
+            .execute(users_cfg)
             .await
+    }
+}
+
+impl Default for TaskExecutor {
+    fn default() -> Self {
+        Self {
+            loader: ScriptLoader::new(),
+        }
     }
 }

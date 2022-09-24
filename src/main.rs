@@ -7,7 +7,7 @@ use tourmaline::{
 async fn main() -> miette::Result<()> {
     color_eyre::install().unwrap();
     dotenv::dotenv().unwrap();
-    let executor = TaskExecutor::new();
+    let executor = TaskExecutor::default();
     let user_cfg = UsersConfig {
         users: vec![
             User {

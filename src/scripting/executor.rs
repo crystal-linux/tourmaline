@@ -10,12 +10,14 @@ use tokio::fs;
 
 use miette::IntoDiagnostic;
 use nu_protocol::{
-    ast::{Block, Call},
+    ast::{Argument, Block, Call, Expr, Expression, Pipeline},
     engine::{EngineState, Stack, StateDelta, StateWorkingSet},
-    PipelineData, Span, Type, Value,
+    DeclId, PipelineData, Signature, Span, Type, Value,
 };
 
 use crate::error::{AppError, AppResult};
+
+use super::record::RecordValue;
 
 #[derive(Clone, Debug)]
 pub enum VarValue {
@@ -34,7 +36,7 @@ impl VarValue {
 /// An executor for nu scripts
 pub struct NuExecutor {
     script_path: PathBuf,
-    args: Vec<String>,
+    args: Vec<RecordValue>,
     global_vars: HashMap<String, VarValue>,
 }
 
@@ -47,14 +49,17 @@ impl NuExecutor {
         }
     }
 
-    pub fn add_arg<S: ToString>(&mut self, arg: S) -> &mut Self {
-        self.args.push(arg.to_string());
+    pub fn add_arg<A: Into<RecordValue>>(&mut self, arg: A) -> &mut Self {
+        self.args.push(arg.into());
 
         self
     }
 
-    pub fn add_args<S: ToString, I: IntoIterator<Item = S>>(&mut self, args: I) -> &mut Self {
-        let mut args = args.into_iter().map(|a| a.to_string()).collect::<Vec<_>>();
+    pub fn add_args<A: Into<RecordValue>, I: IntoIterator<Item = A>>(
+        &mut self,
+        args: I,
+    ) -> &mut Self {
+        let mut args = args.into_iter().map(|a| a.into()).collect::<Vec<_>>();
         self.args.append(&mut args);
 
         self
@@ -74,7 +79,7 @@ impl NuExecutor {
         let mut stack = nu_protocol::engine::Stack::new();
         let init_cwd = nu_cli::get_init_cwd();
         gather_parent_env_vars(&mut engine_state, &init_cwd);
-        nu_engine::convert_env_values(&mut engine_state, &mut stack);
+        nu_engine::convert_env_values(&mut engine_state, &stack);
 
         let vars = mem::take(&mut self.global_vars);
         let vars = vars
@@ -83,7 +88,7 @@ impl NuExecutor {
             .collect::<HashMap<_, _>>();
 
         add_variables_to_state(vars, &mut engine_state, &mut stack);
-        let block = read_script_file(&self.script_path, &mut engine_state).await?;
+        let (block, main_id) = read_script_file(&self.script_path, &mut engine_state).await?;
 
         nu_engine::eval_block(
             &engine_state,
@@ -99,11 +104,7 @@ impl NuExecutor {
 
         // block in a different thread to be able to execute scripts in parallel
         tokio::task::spawn_blocking(move || {
-            // TODO: Create the AST for the call here instead of parsing it from a string
-            let args = format!("main {}", args.join(" "));
-            let (call_block, working_set) = parse_nu(&mut engine_state, args.as_bytes(), None)?;
-            let delta = working_set.render();
-            engine_state.merge_delta(delta);
+            let call_block = create_call(main_id, args);
 
             nu_engine::eval_block(
                 &engine_state,
@@ -149,19 +150,23 @@ fn add_variables_to_state(
 
 /// Reads the nu script file and
 /// returns its root block
-async fn read_script_file(path: &Path, engine_state: &mut EngineState) -> AppResult<Block> {
+async fn read_script_file(
+    path: &Path,
+    engine_state: &mut EngineState,
+) -> AppResult<(Block, DeclId)> {
     let script_contents = fs::read(&path).await.into_diagnostic()?;
     let string_path = path.to_string_lossy().into_owned();
     // parse the source file
     let (block, working_set) = parse_nu(engine_state, &script_contents, Some(&string_path))?;
     // check if a main method exists in the block
-    if !working_set.find_decl(b"main", &Type::Block).is_some() {
-        return Err(AppError::MissingMain(PathBuf::from(path)));
-    }
-    let delta = working_set.render();
-    engine_state.merge_delta(delta);
+    if let Some(decl_id) = working_set.find_decl(b"main", &Type::Block) {
+        let delta = working_set.render();
+        engine_state.merge_delta(delta);
 
-    Ok(block)
+        Ok((block, decl_id))
+    } else {
+        Err(AppError::MissingMain(PathBuf::from(path)))
+    }
 }
 
 fn parse_nu<'a>(
@@ -176,6 +181,35 @@ fn parse_nu<'a>(
         Err(AppError::from(err))
     } else {
         Ok((block, working_set))
+    }
+}
+
+fn create_call(decl_id: DeclId, args: Vec<RecordValue>) -> Block {
+    let args = args
+        .into_iter()
+        .map(|a| Argument::Positional(a.into_expression()))
+        .collect();
+    let call = Call {
+        decl_id,
+        head: Span::new(0, 0),
+        arguments: args,
+        redirect_stdout: true,
+        redirect_stderr: false,
+    };
+    let pipeline = Pipeline {
+        expressions: vec![Expression {
+            expr: Expr::Call(Box::new(call)),
+            span: Span::new(0, 0),
+            ty: Type::Any,
+            custom_completion: None,
+        }],
+    };
+    Block {
+        signature: Box::new(Signature::build("Call to main")),
+        pipelines: vec![pipeline],
+        captures: Vec::new(),
+        redirect_env: false,
+        span: None,
     }
 }
 
