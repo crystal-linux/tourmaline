@@ -13,7 +13,7 @@ pub struct TaskExecutor {
 
 impl TaskExecutor {
     /// Sets up user accounts
-    #[tracing::instrument(level = "debug", skip(self))]
+    #[tracing::instrument(level = "trace", skip(self))]
     pub async fn setup_users(&self, users_cfg: UsersConfig) -> AppResult<()> {
         self.loader
             .load::<SetupUsersScript>()?

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{marker::PhantomData, path::PathBuf};
 
 use serde::Serialize;
@@ -13,7 +14,7 @@ use super::{
 /// A trait implemented for a given nu script type to
 /// associate arguments
 pub trait Script {
-    type Args: ScriptArgs;
+    type Args: ScriptArgs + fmt::Debug;
 
     /// Returns the (expected) name of the script file
     /// This function is used by the loader to load the associated file
@@ -53,6 +54,7 @@ impl<S: Script> NuScript<S> {
     }
 
     /// Executes the script with the given args
+    #[tracing::instrument(level = "trace", skip(self))]
     pub async fn execute(&self, args: S::Args) -> AppResult<()> {
         NuExecutor::new(&self.path)
             .add_args(args.get_args())

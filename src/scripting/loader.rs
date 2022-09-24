@@ -18,6 +18,7 @@ impl ScriptLoader {
     }
 
     /// Loads the given script file
+    #[tracing::instrument(level = "trace", skip_all)]
     pub fn load<S: Script>(&self) -> AppResult<NuScript<S>> {
         let script_path = self.base_dir.join(S::get_name());
 

@@ -74,6 +74,7 @@ impl NuExecutor {
     }
 
     /// Executes the given script file in a clean nu context.
+    #[tracing::instrument(level = "trace", skip_all)]
     pub async fn execute(&mut self) -> AppResult<()> {
         let mut engine_state = nu_command::create_default_context();
         let mut stack = nu_protocol::engine::Stack::new();
@@ -128,6 +129,7 @@ impl NuExecutor {
 
 /// Adds variables to the nu engine state
 /// Note: Calling this function multiple times will override other variables
+#[tracing::instrument(level = "trace", skip(state, stack))]
 fn add_variables_to_state(
     vars: HashMap<String, Value>,
     state: &mut EngineState,
@@ -152,6 +154,7 @@ fn add_variables_to_state(
 
 /// Reads the nu script file and
 /// returns its root block
+#[tracing::instrument(level = "trace", skip(engine_state))]
 async fn read_script_file(
     path: &Path,
     engine_state: &mut EngineState,
@@ -172,6 +175,7 @@ async fn read_script_file(
 }
 
 /// Parses a nu script
+#[tracing::instrument(level = "trace", skip_all)]
 fn parse_nu<'a>(
     engine_state: &'a mut EngineState,
     script: &[u8],
@@ -189,6 +193,7 @@ fn parse_nu<'a>(
 
 /// Creates a call nu expression with the given main block declaration ID
 /// and arguments in the form of record values
+#[tracing::instrument(level = "trace")]
 fn create_call(decl_id: DeclId, args: Vec<RecordValue>) -> Block {
     let args = args
         .into_iter()
