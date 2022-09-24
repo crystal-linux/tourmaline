@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use nu_cli::gather_parent_env_vars;
 use tokio::fs;
 
 use miette::IntoDiagnostic;
@@ -72,6 +73,7 @@ impl NuExecutor {
         let mut engine_state = nu_command::create_default_context();
         let mut stack = nu_protocol::engine::Stack::new();
         let init_cwd = nu_cli::get_init_cwd();
+        gather_parent_env_vars(&mut engine_state, &init_cwd);
         nu_engine::convert_env_values(&mut engine_state, &mut stack);
 
         let vars = mem::take(&mut self.global_vars);
@@ -87,7 +89,7 @@ impl NuExecutor {
             &engine_state,
             &mut stack,
             &block,
-            PipelineData::new(Span::new(0, 0)),
+            empty_pipeline(),
             false,
             false,
         )
@@ -99,17 +101,20 @@ impl NuExecutor {
         tokio::task::spawn_blocking(move || {
             // TODO: Create the AST for the call here instead of parsing it from a string
             let args = format!("main {}", args.join(" "));
-            if !nu_cli::eval_source(
-                &mut engine_state,
+            let (call_block, working_set) = parse_nu(&mut engine_state, args.as_bytes(), None)?;
+            let delta = working_set.render();
+            engine_state.merge_delta(delta);
+
+            nu_engine::eval_block(
+                &engine_state,
                 &mut stack,
-                args.as_bytes(),
-                "<commandline>",
-                PipelineData::new(Span::new(0, 0)),
-            ) {
-                Err(AppError::FailedToExecuteScript)
-            } else {
-                Ok(())
-            }
+                &call_block,
+                empty_pipeline(),
+                false,
+                false,
+            )?;
+
+            AppResult::Ok(())
         })
         .await
         .unwrap()?;
@@ -145,29 +150,37 @@ fn add_variables_to_state(
 /// Reads the nu script file and
 /// returns its root block
 async fn read_script_file(path: &Path, engine_state: &mut EngineState) -> AppResult<Block> {
-    let mut working_set = StateWorkingSet::new(engine_state);
-    // TODO: Async
     let script_contents = fs::read(&path).await.into_diagnostic()?;
     let string_path = path.to_string_lossy().into_owned();
     // parse the source file
-    let (block, err) = nu_parser::parse(
-        &mut working_set,
-        Some(&string_path),
-        &script_contents,
-        false,
-        &[],
-    );
-
-    if let Some(err) = err {
-        return Err(AppError::from(err));
-    }
+    let (block, working_set) = parse_nu(engine_state, &script_contents, Some(&string_path))?;
     // check if a main method exists in the block
     if !working_set.find_decl(b"main", &Type::Block).is_some() {
         return Err(AppError::MissingMain(PathBuf::from(path)));
     }
-    engine_state.merge_delta(working_set.render());
+    let delta = working_set.render();
+    engine_state.merge_delta(delta);
 
     Ok(block)
+}
+
+fn parse_nu<'a>(
+    engine_state: &'a mut EngineState,
+    script: &[u8],
+    script_path: Option<&str>,
+) -> AppResult<(Block, StateWorkingSet<'a>)> {
+    let mut working_set = StateWorkingSet::new(engine_state);
+    let (block, err) = nu_parser::parse(&mut working_set, script_path, script, false, &[]);
+
+    if let Some(err) = err {
+        Err(AppError::from(err))
+    } else {
+        Ok((block, working_set))
+    }
+}
+
+fn empty_pipeline() -> PipelineData {
+    PipelineData::new(Span::new(0, 0))
 }
 
 fn map_var_to_value(var: VarValue) -> Value {

@@ -4,7 +4,7 @@ use tourmaline::{
 };
 
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
+async fn main() -> miette::Result<()> {
     color_eyre::install().unwrap();
     dotenv::dotenv().unwrap();
     let executor = TaskExecutor::new();
@@ -24,5 +24,7 @@ async fn main() {
             },
         ],
     };
-    executor.setup_users(user_cfg).await.unwrap();
+    executor.setup_users(user_cfg).await?;
+
+    Ok(())
 }
