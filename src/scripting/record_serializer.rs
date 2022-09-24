@@ -9,10 +9,14 @@ pub struct RecordSerializer {
     list_serializer: Option<RecordListSerializer>,
     map_serializer: Option<RecordMapSerializer>,
 }
+
+#[derive(Default)]
 pub struct RecordListSerializer {
     serializer: Option<Box<RecordSerializer>>,
     entries: Vec<RecordValue>,
 }
+
+#[derive(Default)]
 pub struct RecordMapSerializer {
     serializer: Option<Box<RecordSerializer>>,
     last_key: Option<RecordValue>,
@@ -20,7 +24,7 @@ pub struct RecordMapSerializer {
 }
 
 impl RecordSerializer {
-    pub fn list_serializer<'a>(&'a mut self, cap: Option<usize>) -> &'a mut RecordListSerializer {
+    pub fn list_serializer(&mut self, cap: Option<usize>) -> &mut RecordListSerializer {
         if self.list_serializer.is_none() {
             self.list_serializer = Some(RecordListSerializer::with_capacity_opt(cap));
         }
@@ -36,13 +40,6 @@ impl RecordSerializer {
 }
 
 impl RecordListSerializer {
-    pub fn new() -> Self {
-        Self {
-            entries: Vec::new(),
-            serializer: None,
-        }
-    }
-
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             entries: Vec::with_capacity(capacity),
@@ -53,7 +50,7 @@ impl RecordListSerializer {
     pub fn with_capacity_opt(capacity: Option<usize>) -> Self {
         match capacity {
             Some(cap) => Self::with_capacity(cap),
-            None => Self::new(),
+            None => Self::default(),
         }
     }
 
@@ -66,13 +63,6 @@ impl RecordListSerializer {
 }
 
 impl RecordMapSerializer {
-    pub fn new() -> Self {
-        Self {
-            last_key: None,
-            entries: Vec::new(),
-            serializer: None,
-        }
-    }
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             last_key: None,
@@ -80,12 +70,14 @@ impl RecordMapSerializer {
             serializer: None,
         }
     }
+
     pub fn with_capacity_opt(capacity: Option<usize>) -> Self {
         match capacity {
             Some(cap) => Self::with_capacity(cap),
-            None => Self::new(),
+            None => Self::default(),
         }
     }
+
     pub fn serializer(&mut self) -> &mut RecordSerializer {
         if self.serializer.is_none() {
             self.serializer = Some(Box::new(RecordSerializer::default()));

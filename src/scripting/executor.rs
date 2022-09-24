@@ -90,6 +90,7 @@ impl NuExecutor {
         add_variables_to_state(vars, &mut engine_state, &mut stack);
         let (block, main_id) = read_script_file(&self.script_path, &mut engine_state).await?;
 
+        // put everything the script defines into scope
         nu_engine::eval_block(
             &engine_state,
             &mut stack,
@@ -104,6 +105,7 @@ impl NuExecutor {
 
         // block in a different thread to be able to execute scripts in parallel
         tokio::task::spawn_blocking(move || {
+            // create a call to the main method wit the given arguments and execute it
             let call_block = create_call(main_id, args);
 
             nu_engine::eval_block(
@@ -169,6 +171,7 @@ async fn read_script_file(
     }
 }
 
+/// Parses a nu script
 fn parse_nu<'a>(
     engine_state: &'a mut EngineState,
     script: &[u8],
@@ -184,6 +187,8 @@ fn parse_nu<'a>(
     }
 }
 
+/// Creates a call nu expression with the given main block declaration ID
+/// and arguments in the form of record values
 fn create_call(decl_id: DeclId, args: Vec<RecordValue>) -> Block {
     let args = args
         .into_iter()

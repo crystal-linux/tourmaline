@@ -65,3 +65,21 @@ impl<S: Script> NuScript<S> {
             .await
     }
 }
+
+#[macro_export]
+macro_rules! script {
+    ($script:ident {
+        file = $name:literal
+        args = $argtype:ident
+    }) => {
+        pub struct $script;
+
+        impl $crate::scripting::script::Script for $script {
+            type Args = $argtype;
+
+            fn get_name() -> &'static str {
+                $name
+            }
+        }
+    };
+}

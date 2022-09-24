@@ -1,8 +1,11 @@
 use serde::Serialize;
 
-use crate::scripting::script::Script;
+use crate::script;
 
-pub struct SetupUsersScript;
+script!(SetupUsersScript {
+    file = "setup-users.nu"
+    args = UsersConfig
+});
 
 #[derive(Clone, Debug, Serialize)]
 pub struct UsersConfig {
@@ -15,12 +18,4 @@ pub struct User {
     pub password: String,
     pub sudoer: bool,
     pub shell: String,
-}
-
-impl Script for SetupUsersScript {
-    type Args = UsersConfig;
-
-    fn get_name() -> &'static str {
-        "setup-users.nu"
-    }
 }
