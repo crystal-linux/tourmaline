@@ -16,6 +16,16 @@ lazy_static::lazy_static! {
 }
 
 pub async fn generate_script_files<P: AsRef<Path>>(output: P) -> AppResult<()> {
+    let script_path = output.as_ref().join("scripts");
+    let hook_path = output.as_ref().join("hooks");
+
+    if !script_path.exists() {
+        fs::create_dir_all(&script_path).await?;
+    }
+    if !hook_path.exists() {
+        fs::create_dir_all(&hook_path).await?;
+    }
+
     let tasks = all_tasks();
 
     for task in tasks {

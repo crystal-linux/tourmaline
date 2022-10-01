@@ -31,6 +31,14 @@ pub struct TaskExecutor {
 }
 
 impl TaskExecutor {
+    /// Creates a new task executor with a given config
+    pub fn with_config(config: Config) -> Self {
+        Self {
+            config: Some(config),
+            loader: ScriptLoader::new(),
+        }
+    }
+
     tasks!(
         setup_users => SetupUsersScript,
         configure_network => ConfigureNetworkScript,
