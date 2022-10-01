@@ -12,6 +12,7 @@ pub mod error;
 pub(crate) mod scripting;
 pub mod tasks;
 pub(crate) mod utils;
+pub use utils::generate_script_files;
 
 macro_rules! tasks {
     ($($function:ident => $script:ident),+) => {

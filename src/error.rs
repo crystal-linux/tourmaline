@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io, path::PathBuf};
 
 use miette::Diagnostic;
 use nu_protocol::ShellError;
@@ -32,6 +32,9 @@ pub enum AppError {
 
     #[error("Missing config")]
     MissingConfig,
+
+    #[error("IO Error: {0}")]
+    Io(#[from] io::Error),
 }
 
 impl From<miette::Error> for AppError {
