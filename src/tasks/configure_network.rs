@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::script;
 
@@ -7,7 +7,7 @@ script!(ConfigureNetworkScript {
     args = NetworkConfig
 });
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NetworkConfig {
     pub hostname: String,
     pub ipv6_loopback: bool,

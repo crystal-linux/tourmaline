@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::script;
 
@@ -7,7 +7,7 @@ script!(ConfigureLocaleScript {
     args = LocaleConfig
 });
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct LocaleConfig {
     pub locale: Vec<String>,
     pub keymap: String,

@@ -110,7 +110,7 @@ impl NuExecutor {
             // create a call to the main method wit the given arguments and execute it
             let call_block = create_call(main_id, args);
 
-            nu_engine::eval_block(
+            let data = nu_engine::eval_block(
                 &engine_state,
                 &mut stack,
                 &call_block,
@@ -118,6 +118,9 @@ impl NuExecutor {
                 false,
                 false,
             )?;
+            // the last print is returned as the result pipeline of the script so
+            // we need to print it manually
+            data.print(&mut engine_state, &mut stack, false, true);
 
             AppResult::Ok(())
         })

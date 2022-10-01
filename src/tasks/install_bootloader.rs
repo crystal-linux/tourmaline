@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::script;
 
@@ -9,13 +9,13 @@ script!(InstallBootloaderScript {
     args = BootloaderConfig
 });
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BootloaderConfig {
-    preset: BootloaderPreset,
-    location: PathBuf,
+    pub preset: BootloaderPreset,
+    pub location: PathBuf,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum BootloaderPreset {
     GrubEfi,
     Legacy,

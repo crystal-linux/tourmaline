@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::script;
 
@@ -9,27 +9,27 @@ script!(CreatePartitionsScript {
     args = PartitionsConfig
 });
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PartitionsConfig {
     pub device: PathBuf,
     pub efi_partition: bool,
     pub partitions: Partitions,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum Partitions {
     Auto,
     Manual(Vec<Partition>),
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Partition {
     pub mountpoint: PathBuf,
     pub blockdevice: PathBuf,
     pub filesystem: Option<FileSystem>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum FileSystem {
     VFAT,
     BFS,

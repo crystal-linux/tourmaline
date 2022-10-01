@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::script;
 
@@ -7,7 +7,7 @@ script!(InstallDesktopScript {
     args = DesktopConfig
 });
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum DesktopConfig {
     Onyx,
     KdePlasma,

@@ -9,7 +9,7 @@ pub type AppResult<T> = std::result::Result<T, AppError>;
 #[derive(Error, Diagnostic, Debug)]
 pub enum AppError {
     #[error("Miette error")]
-    #[diagnostic(code(tourmaline::error))]
+    #[diagnostic()]
     Miette(miette::Error),
 
     #[error("Error while evaluating nu script")]
@@ -20,7 +20,7 @@ pub enum AppError {
     ScriptNotFound(PathBuf),
 
     #[diagnostic()]
-    #[error("Could not parse the source file")]
+    #[error("Could not parse the source file: {0}")]
     ParseError(#[from] nu_parser::ParseError),
 
     #[diagnostic()]
@@ -29,6 +29,9 @@ pub enum AppError {
 
     #[error("Failed to execute script")]
     FailedToExecuteScript,
+
+    #[error("Missing config")]
+    MissingConfig,
 }
 
 impl From<miette::Error> for AppError {
