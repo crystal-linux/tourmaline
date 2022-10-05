@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use serde::{Deserialize, Serialize};
+use embed_nu::RustyValue;
+use serde::Deserialize;
 
 use crate::tasks::{
     BootloaderConfig, BootloaderPreset, DesktopConfig, ExtraPackages, Kernel, KernelConfig,
@@ -8,7 +9,7 @@ use crate::tasks::{
     UsersConfig,
 };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, RustyValue)]
 pub struct Config {
     pub locale: LocaleConfig,
     pub network: NetworkConfig,

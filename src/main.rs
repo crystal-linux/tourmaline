@@ -1,6 +1,5 @@
 use args::{Args, Command, GenerateScriptsArgs, InstallFromConfigArgs};
 use clap::Parser;
-use miette::{Context, IntoDiagnostic};
 use tokio::{fs::OpenOptions, io::AsyncReadExt};
 use tourmaline::{config::Config, error::AppResult, generate_script_files, TaskExecutor};
 
@@ -20,20 +19,10 @@ async fn main() {
 }
 
 async fn install_from_config(args: InstallFromConfigArgs) -> AppResult<()> {
-    let mut file = OpenOptions::new()
-        .read(true)
-        .open(args.path)
-        .await
-        .into_diagnostic()
-        .context("Could not read file")?;
+    let mut file = OpenOptions::new().read(true).open(args.path).await?;
     let mut cfg_contents = String::new();
-    file.read_to_string(&mut cfg_contents)
-        .await
-        .into_diagnostic()
-        .context("Could not read file")?;
-    let config: Config = serde_json::from_str(&cfg_contents)
-        .into_diagnostic()
-        .context("Could not parse config as JSON")?;
+    file.read_to_string(&mut cfg_contents).await?;
+    let config: Config = serde_json::from_str(&cfg_contents)?;
 
     TaskExecutor::with_config(config)
         .install_from_config()

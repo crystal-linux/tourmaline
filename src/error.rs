@@ -1,29 +1,17 @@
 use std::{io, path::PathBuf};
 
-use miette::Diagnostic;
-use nu_protocol::ShellError;
 use thiserror::Error;
 
 pub type AppResult<T> = std::result::Result<T, AppError>;
 
-#[derive(Error, Diagnostic, Debug)]
+#[derive(Error, Debug)]
 pub enum AppError {
-    #[error("Miette error")]
-    #[diagnostic()]
-    Miette(miette::Error),
-
-    #[error("Error while evaluating nu script")]
-    #[diagnostic()]
-    Nu(#[from] ShellError),
-
     #[error("Could not find the script file")]
     ScriptNotFound(PathBuf),
 
-    #[diagnostic()]
-    #[error("Could not parse the source file: {0}")]
-    ParseError(#[from] nu_parser::ParseError),
+    #[error("Nu error {0}")]
+    NuError(#[from] embed_nu::Error),
 
-    #[diagnostic()]
     #[error("Could not find the main mehod in the script file {0}")]
     MissingMain(PathBuf),
 
@@ -35,10 +23,7 @@ pub enum AppError {
 
     #[error("IO Error: {0}")]
     Io(#[from] io::Error),
-}
 
-impl From<miette::Error> for AppError {
-    fn from(e: miette::Error) -> Self {
-        Self::Miette(e)
-    }
+    #[error("JSON deserialization error {0}")]
+    JSON(#[from] serde_json::Error),
 }

@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use embed_nu::RustyValue;
+use serde::Deserialize;
 
 use crate::script;
 
@@ -7,12 +8,12 @@ script!(SetupUsersScript {
     args = UsersConfig
 });
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, RustyValue)]
 pub struct UsersConfig {
     pub users: Vec<User>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, RustyValue)]
 pub struct User {
     pub name: String,
     pub password: String,

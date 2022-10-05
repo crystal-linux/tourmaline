@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use embed_nu::rusty_value::RustyValue;
+use serde::Deserialize;
 
 use crate::script;
 
@@ -7,7 +8,7 @@ script!(ConfigureLocaleScript {
     args = LocaleConfig
 });
 
-#[derive(Clone, Deserialize, Serialize, Debug)]
+#[derive(Clone, Deserialize, RustyValue, Debug)]
 pub struct LocaleConfig {
     pub locale: Vec<String>,
     pub keymap: String,

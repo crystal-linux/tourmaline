@@ -16,23 +16,19 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.0.7", features = ["derive"] }
+clap = { version = "4.0.9", features = ["derive"] }
 color-eyre = "0.6.2"
 dotenv = "0.15.0"
+embed-nu = "0.2.5"
 lazy_static = "1.4.0"
-miette = "5.3.0"
-nu-cli = "0.68.1"
-nu-command = "0.68.1"
-nu-engine = "0.68.1"
-nu-parser = "0.68.1"
-nu-protocol = "0.68.1"
-serde = { version = "1.0.144", features = ["derive"] }
+rusty-value = "0.4.1"
+serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.85"
-thiserror = "1.0.35"
-tokio = { version = "1.21.1", features = ["rt", "io-std", "io-util", "process", "time", "macros", "tracing", "fs"] }
+thiserror = "1.0.37"
+tokio = { version = "1.21.2", features = ["rt", "io-std", "io-util", "process", "time", "macros", "tracing", "fs"] }
 tracing = "0.1.36"
 tracing-subscriber = "0.3.15"
 
 [build-dependencies]
-cargo_toml = "0.12.3"
-serde = { version = "1.0.144", features = ["derive"] }
+cargo_toml = "0.12.4"
+serde = { version = "1.0.145", features = ["derive"] }

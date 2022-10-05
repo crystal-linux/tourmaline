@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use embed_nu::rusty_value::RustyValue;
+use serde::Deserialize;
 
 use crate::script;
 
@@ -7,7 +8,7 @@ script!(ConfigureNetworkScript {
     args = NetworkConfig
 });
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, RustyValue)]
 pub struct NetworkConfig {
     pub hostname: String,
     pub ipv6_loopback: bool,

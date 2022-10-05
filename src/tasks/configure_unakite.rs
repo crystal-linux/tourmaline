@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use serde::{Deserialize, Serialize};
+use embed_nu::rusty_value::RustyValue;
+use serde::Deserialize;
 
 use crate::script;
 
@@ -9,7 +10,7 @@ script!(ConfigureUnakiteScript {
     args = UnakiteConfig
 });
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, RustyValue, Deserialize)]
 pub struct UnakiteConfig {
     pub root: PathBuf,
     pub old_root: PathBuf,
