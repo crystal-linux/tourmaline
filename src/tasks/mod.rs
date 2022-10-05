@@ -55,16 +55,13 @@ impl TaskFiles {
 macro_rules! __all_tasks {
     ($($task:ident),+) => {
         {
-            let mut list = Vec::new();
-            $(
-                list.push(TaskFiles {
+            vec![$(
+                TaskFiles {
                     script: $task::get_name().into(),
                     pre_hook: $task::get_pre_hook().into(),
                     post_hook: $task::get_post_hook().into(),
-                });
-            )+
-
-            list
+                },
+            )+]
         }
     };
 }

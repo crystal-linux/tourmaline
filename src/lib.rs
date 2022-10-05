@@ -58,7 +58,7 @@ impl TaskExecutor {
     /// Installs the system from the given system configuration
     #[tracing::instrument(level = "trace", skip(self))]
     pub async fn install_from_config(&self) -> AppResult<()> {
-        let config = self.config.clone().ok_or_else(|| AppError::MissingConfig)?;
+        let config = self.config.clone().ok_or(AppError::MissingConfig)?;
         self.create_partitions(config.partitions).await?;
         self.install_base(()).await?;
         self.install_kernels(config.kernels).await?;
