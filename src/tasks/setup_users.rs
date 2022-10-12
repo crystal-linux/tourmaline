@@ -1,4 +1,4 @@
-use embed_nu::RustyValue;
+use embed_nu::rusty_value::*;
 use serde::Deserialize;
 
 use crate::script;

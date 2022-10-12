@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use embed_nu::rusty_value::RustyValue;
+use embed_nu::rusty_value::*;
 use serde::Deserialize;
 
 use crate::script;
